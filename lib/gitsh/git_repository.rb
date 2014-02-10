@@ -3,6 +3,10 @@ require 'shellwords'
 
 module Gitsh
   class GitRepository
+    def initialize(env)
+      @env = env
+    end
+
     def initialized?
       git_dir && File.exist?(git_dir)
     end
@@ -53,6 +57,8 @@ module Gitsh
 
     private
 
+    attr_reader :env
+
     def current_branch_name
       git_output('symbolic-ref HEAD').split('/').last
     end
@@ -84,7 +90,7 @@ module Gitsh
     end
 
     def git_command(sub_command)
-      "/usr/bin/env git #{sub_command}"
+      "#{env.git_command} #{sub_command}"
     end
 
     class StatusParser
