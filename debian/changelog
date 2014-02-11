@@ -1,0 +1,5 @@
+gitsh (0.4.0-1) unstable; urgency=low
+
+  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+
+ -- Fred Ollinger <follinge@unknown>  Tue, 11 Feb 2014 10:23:11 -0800

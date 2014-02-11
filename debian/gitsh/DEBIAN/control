@@ -1,0 +1,10 @@
+Package: gitsh
+Version: 0.4.0-1
+Architecture: i386
+Maintainer: Fred Ollinger <follinge@unknown>
+Installed-Size: 25
+Section: shell
+Priority: extra
+Homepage: https://github.com/thoughtbot/gitsh
+Description: Git shell.
+ Shell for git.

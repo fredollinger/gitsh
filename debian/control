@@ -1,0 +1,15 @@
+Source: gitsh
+Section: shell
+Priority: extra
+Maintainer: Fred Ollinger <follinge@unknown>
+Build-Depends: debhelper (>= 8.0.0), autotools-dev, ruby2.0, ruby-bundler, ruby-blankslate
+Standards-Version: 3.9.4
+Homepage: https://github.com/thoughtbot/gitsh
+#Vcs-Git: git://git.debian.org/collab-maint/gitsh.git
+#Vcs-Browser: http://git.debian.org/?p=collab-maint/gitsh.git;a=summary
+
+Package: gitsh
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Git shell.
+ Shell for git.
