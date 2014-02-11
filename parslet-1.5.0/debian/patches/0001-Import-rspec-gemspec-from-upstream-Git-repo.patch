@@ -1,0 +1,2963 @@
+From: Youhei SASAKI <uwabami@gfd-dennou.org>
+Date: Tue, 14 Jan 2014 15:39:51 +0900
+Subject: Import rspec, gemspec from upstream Git repo.
+
+Signed-off-by: Youhei SASAKI <uwabami@gfd-dennou.org>
+---
+ parslet.gemspec                              |  18 ++
+ spec/acceptance/examples_spec.rb             |  37 +++
+ spec/acceptance/regression_spec.rb           | 314 ++++++++++++++++++++
+ spec/acceptance/repetition_and_maybe_spec.rb |  42 +++
+ spec/acceptance/unconsumed_input_spec.rb     |  21 ++
+ spec/parslet/atom_results_spec.rb            |  39 +++
+ spec/parslet/atoms/alternative_spec.rb       |  26 ++
+ spec/parslet/atoms/base_spec.rb              | 124 ++++++++
+ spec/parslet/atoms/capture_spec.rb           |  21 ++
+ spec/parslet/atoms/combinations_spec.rb      |  17 ++
+ spec/parslet/atoms/dsl_spec.rb               |  17 ++
+ spec/parslet/atoms/entity_spec.rb            |  52 ++++
+ spec/parslet/atoms/lookahead_spec.rb         |  22 ++
+ spec/parslet/atoms/named_spec.rb             |   4 +
+ spec/parslet/atoms/re_spec.rb                |  14 +
+ spec/parslet/atoms/scope_spec.rb             |  26 ++
+ spec/parslet/atoms/sequence_spec.rb          |  28 ++
+ spec/parslet/atoms/str_spec.rb               |  15 +
+ spec/parslet/atoms/visitor_spec.rb           |  80 +++++
+ spec/parslet/atoms_spec.rb                   | 429 +++++++++++++++++++++++++++
+ spec/parslet/convenience_spec.rb             |  48 +++
+ spec/parslet/error_reporter/deepest_spec.rb  |  73 +++++
+ spec/parslet/error_reporter/tree_spec.rb     |   7 +
+ spec/parslet/export_spec.rb                  |  67 +++++
+ spec/parslet/expression/treetop_spec.rb      |  74 +++++
+ spec/parslet/minilisp.citrus                 |  29 ++
+ spec/parslet/minilisp.tt                     |  29 ++
+ spec/parslet/parser_spec.rb                  |  31 ++
+ spec/parslet/parslet_spec.rb                 |  38 +++
+ spec/parslet/pattern_spec.rb                 | 268 +++++++++++++++++
+ spec/parslet/rig/rspec_spec.rb               |  35 +++
+ spec/parslet/scope_spec.rb                   |  45 +++
+ spec/parslet/slice_spec.rb                   | 134 +++++++++
+ spec/parslet/source/line_cache_spec.rb       |  39 +++
+ spec/parslet/source_spec.rb                  | 154 ++++++++++
+ spec/parslet/transform/context_spec.rb       |  35 +++
+ spec/parslet/transform_spec.rb               | 144 +++++++++
+ spec/spec_helper.rb                          |  24 ++
+ 38 files changed, 2620 insertions(+)
+ create mode 100644 parslet.gemspec
+ create mode 100644 spec/acceptance/examples_spec.rb
+ create mode 100644 spec/acceptance/regression_spec.rb
+ create mode 100644 spec/acceptance/repetition_and_maybe_spec.rb
+ create mode 100644 spec/acceptance/unconsumed_input_spec.rb
+ create mode 100644 spec/parslet/atom_results_spec.rb
+ create mode 100644 spec/parslet/atoms/alternative_spec.rb
+ create mode 100644 spec/parslet/atoms/base_spec.rb
+ create mode 100644 spec/parslet/atoms/capture_spec.rb
+ create mode 100644 spec/parslet/atoms/combinations_spec.rb
+ create mode 100644 spec/parslet/atoms/dsl_spec.rb
+ create mode 100644 spec/parslet/atoms/entity_spec.rb
+ create mode 100644 spec/parslet/atoms/lookahead_spec.rb
+ create mode 100644 spec/parslet/atoms/named_spec.rb
+ create mode 100644 spec/parslet/atoms/re_spec.rb
+ create mode 100644 spec/parslet/atoms/scope_spec.rb
+ create mode 100644 spec/parslet/atoms/sequence_spec.rb
+ create mode 100644 spec/parslet/atoms/str_spec.rb
+ create mode 100644 spec/parslet/atoms/visitor_spec.rb
+ create mode 100644 spec/parslet/atoms_spec.rb
+ create mode 100644 spec/parslet/convenience_spec.rb
+ create mode 100644 spec/parslet/error_reporter/deepest_spec.rb
+ create mode 100644 spec/parslet/error_reporter/tree_spec.rb
+ create mode 100644 spec/parslet/export_spec.rb
+ create mode 100644 spec/parslet/expression/treetop_spec.rb
+ create mode 100644 spec/parslet/minilisp.citrus
+ create mode 100644 spec/parslet/minilisp.tt
+ create mode 100644 spec/parslet/parser_spec.rb
+ create mode 100644 spec/parslet/parslet_spec.rb
+ create mode 100644 spec/parslet/pattern_spec.rb
+ create mode 100644 spec/parslet/rig/rspec_spec.rb
+ create mode 100644 spec/parslet/scope_spec.rb
+ create mode 100644 spec/parslet/slice_spec.rb
+ create mode 100644 spec/parslet/source/line_cache_spec.rb
+ create mode 100644 spec/parslet/source_spec.rb
+ create mode 100644 spec/parslet/transform/context_spec.rb
+ create mode 100644 spec/parslet/transform_spec.rb
+ create mode 100644 spec/spec_helper.rb
+
+diff --git a/parslet.gemspec b/parslet.gemspec
+new file mode 100644
+index 0000000..793074f
+--- /dev/null
++++ b/parslet.gemspec
+@@ -0,0 +1,18 @@
++# -*- encoding: utf-8 -*-
++
++Gem::Specification.new do |s|
++  s.name = 'parslet'
++  s.version = '1.5.0'
++
++  s.authors = ['Kaspar Schiess']
++  s.email = 'kaspar.schiess@absurd.li'
++  s.extra_rdoc_files = ['README']
++  s.files = %w(HISTORY.txt LICENSE Rakefile README) + Dir.glob("{lib,example}/**/*")
++  s.homepage = 'http://kschiess.github.com/parslet'
++  s.license = 'MIT'
++  s.rdoc_options = ['--main', 'README']
++  s.require_paths = ['lib']
++  s.summary = 'Parser construction library with great error reporting in Ruby.'  
++  
++  s.add_dependency 'blankslate', '~> 2.0'
++end
+diff --git a/spec/acceptance/examples_spec.rb b/spec/acceptance/examples_spec.rb
+new file mode 100644
+index 0000000..0fa7552
+--- /dev/null
++++ b/spec/acceptance/examples_spec.rb
+@@ -0,0 +1,37 @@
++require 'spec_helper'
++require 'open3'
++
++describe "Regression on" do
++  Dir["example/*.rb"].each do |example|
++    context example do
++      # Generates a product path for a given example file. 
++      def product_path(str, ext)
++        str.
++          gsub('.rb', ".#{ext}").
++          gsub('example/','example/output/')
++      end
++      
++      it "runs successfully", :ruby => 1.9 do
++        stdin, stdout, stderr = Open3.popen3("ruby #{example}")
++        
++        handle_map = {
++          stdout => :out, 
++          stderr => :err
++        }
++        expectation_found = handle_map.any? do |io, ext|
++          name = product_path(example, ext)
++          
++          if File.exists?(name)
++            io.read.strip.should == File.read(name).strip
++            true
++          end
++        end
++        
++        unless expectation_found
++          fail "Example doesn't have either an .err or an .out file. "+
++            "Please create in examples/output!"
++        end
++      end
++    end
++  end
++end
+diff --git a/spec/acceptance/regression_spec.rb b/spec/acceptance/regression_spec.rb
+new file mode 100644
+index 0000000..0135d94
+--- /dev/null
++++ b/spec/acceptance/regression_spec.rb
+@@ -0,0 +1,314 @@
++# Encoding: UTF-8
++
++require 'spec_helper'
++
++require 'parslet'
++
++describe "Regressions from real examples" do
++  # This parser piece produces on the left a subtree that is keyed (a hash)
++  # and on the right a subtree that is a repetition of such subtrees. I've
++  # for now decided that these would merge into the repetition such that the
++  # return value is an array. This avoids maybe loosing keys/values in a 
++  # hash merge. 
++  #
++  class ArgumentListParser
++    include Parslet
++
++    rule :argument_list do
++      expression.as(:argument) >> 
++        (comma >> expression.as(:argument)).repeat
++    end
++    rule :expression do
++      string
++    end
++    rule :string do
++      str('"') >> 
++      (
++        str('\\') >> any |
++        str('"').absent? >> any
++      ).repeat.as(:string) >>
++      str('"') >> space?
++    end
++    rule :comma do
++      str(',') >> space?
++    end
++    rule :space? do
++      space.maybe
++    end
++    rule :space do
++      match("[ \t]").repeat(1)
++    end
++    
++    def parse(str)
++      argument_list.parse(str)
++    end
++  end
++  describe ArgumentListParser do
++    let(:instance) { ArgumentListParser.new }
++    it "should have method expression" do
++      instance.should respond_to(:expression)
++    end 
++    it 'should parse "arg1", "arg2"' do
++      result = ArgumentListParser.new.parse('"arg1", "arg2"')
++      
++      result.should have(2).elements
++      result.each do |r|
++        r[:argument]
++      end
++    end
++    it 'should parse "arg1", "arg2", "arg3"' do
++      result = ArgumentListParser.new.parse('"arg1", "arg2", "arg3"')
++      
++      result.should have(3).elements
++      result.each do |r|
++        r[:argument]
++      end
++    end
++  end
++
++  class ParensParser < Parslet::Parser
++    rule(:balanced) {
++      str('(').as(:l) >> balanced.maybe.as(:m) >> str(')').as(:r)
++    }
++  
++    root(:balanced)
++  end
++  describe ParensParser do
++    let(:instance) { ParensParser.new }
++    
++    context "statefulness: trying several expressions in sequence" do
++      it "should not be stateful" do
++        # NOTE: Since you've come here to read this, I'll explain why
++        # this is broken and not fixed: You're looking at the tuning branch, 
++        # which rewrites a bunch of stuff - so I have failing tests to 
++        # remind me of what is left to be done. And to remind you not to 
++        # trust this code. 
++        instance.parse('(())')
++        lambda {
++          instance.parse('((()))')
++          instance.parse('(((())))')
++        }.should_not raise_error(Parslet::ParseFailed)
++      end 
++    end
++    context "expression '(())'" do
++      let(:result) { instance.parse('(())') }
++
++      it "should yield a doubly nested hash" do
++        result.should be_a(Hash)
++        result.should have_key(:m)
++        result[:m].should be_a(Hash)   # This was an array earlier
++      end 
++      context "inner hash" do
++        let(:inner) { result[:m] }
++        
++        it "should have nil as :m" do
++          inner[:m].should be_nil
++        end 
++      end
++    end
++  end
++
++  class ALanguage < Parslet::Parser
++    root(:expressions)
++
++    rule(:expressions) { (line >> eol).repeat(1) | line }
++    rule(:line) { space? >> an_expression.as(:exp).repeat }
++    rule(:an_expression) { str('a').as(:a) >> space? }
++
++    rule(:eol) { space? >> match["\n\r"].repeat(1) >> space? }
++
++    rule(:space?) { space.repeat }
++    rule(:space) { multiline_comment.as(:multi) | line_comment.as(:line) | str(' ') }
++
++    rule(:line_comment) { str('//') >> (match["\n\r"].absent? >> any).repeat }
++    rule(:multiline_comment) { str('/*') >> (str('*/').absent? >> any).repeat >> str('*/') }
++  end
++  describe ALanguage do
++    def remove_indent(s)
++      s.to_s.lines.map { |l| l.chomp.strip }.join("\n")
++    end
++    
++    it "should count lines correctly" do
++      cause = catch_failed_parse {
++        subject.parse('a
++          a a a 
++          aaa // ff
++          /* 
++          a
++          */
++          b
++        ')
++      }
++
++      remove_indent(cause.ascii_tree).should == remove_indent(%q(
++      Expected one of [(LINE EOL){1, }, LINE] at line 1 char 1.
++      |- Extra input after last repetition at line 7 char 11.
++      |  `- Failed to match sequence (LINE EOL) at line 7 char 11.
++      |     `- Failed to match sequence (SPACE? [\n\r]{1, } SPACE?) at line 7 char 11.
++      |        `- Expected at least 1 of [\n\r] at line 7 char 11.
++      |           `- Failed to match [\n\r] at line 7 char 11.
++      `- Don't know what to do with "\n         " at line 1 char 2.).strip)
++    end 
++  end
++
++  class BLanguage < Parslet::Parser
++    root :expression
++    rule(:expression) { b.as(:one) >> b.as(:two) }
++    rule(:b) { str('b') }
++  end
++  describe BLanguage do
++    it "should parse 'bb'" do
++      subject.should parse('bb').as(:one => 'b', :two => 'b')
++    end 
++    it "should transform with binding constraint" do
++      transform = Parslet::Transform.new do |t|
++        t.rule(:one => simple(:b), :two => simple(:b)) { :ok }
++      end
++      transform.apply(subject.parse('bb')).should == :ok
++    end 
++  end
++
++  class UnicodeLanguage < Parslet::Parser
++    root :gobble
++    rule(:gobble) { any.repeat }
++  end
++  describe UnicodeLanguage do
++    it "should parse UTF-8 strings" do
++      subject.should parse('éèäöü').as('éèäöü')
++      subject.should parse('RubyKaigi2009のテーマは、「変わる／変える」です。 前回の').as('RubyKaigi2009のテーマは、「変わる／変える」です。 前回の')
++    end 
++  end
++  
++  class UnicodeSentenceLanguage < Parslet::Parser
++    rule(:sentence) { (match('[^。]').repeat(1) >> str("。")).as(:sentence) }
++    rule(:sentences) { sentence.repeat }
++    root(:sentences)
++  end
++  describe UnicodeSentenceLanguage, :ruby => 1.9 do
++    let(:string) {
++      "RubyKaigi2009のテーマは、「変わる／変える」です。 前回の" +
++      "RubyKaigi2008のテーマであった「多様性」の言葉の通り、 " +
++      "2008年はRubyそのものに関しても、またRubyの活躍する舞台に関しても、 " +
++      "ますます多様化が進みつつあります。RubyKaigi2008は、そのような " +
++      "Rubyの生態系をあらためて認識する場となりました。 しかし、" +
++      "こうした多様化が進む中、異なる者同士が単純に距離を 置いたままでは、" +
++      "その違いを認識したところであまり意味がありません。 異なる実装、" +
++      "異なる思想、異なる背景といった、様々な多様性を理解しつつ、 " +
++      "すり合わせるべきものをすり合わせ、変えていくべきところを " +
++      "変えていくことが、豊かな未来へとつながる道に違いありません。"
++    }
++    
++    it "should parse sentences" do
++      subject.should parse(string)
++    end 
++  end
++
++  class TwoCharLanguage < Parslet::Parser
++    root :twochar
++    rule(:twochar) { any >> str('2') }
++  end
++  describe TwoCharLanguage do
++    def di(s)
++      s.strip.to_s.lines.map { |l| l.chomp.strip }.join("\n")
++    end
++
++    it "should raise an error" do
++      error = catch_failed_parse {
++        subject.parse('123') }
++      di(error.ascii_tree).should == di(%q(
++        Failed to match sequence (. '2') at line 1 char 2.
++        `- Don't know what to do with "3" at line 1 char 3.
++      ))
++    end 
++  end
++
++  # Issue #68: Extra input reporting, written by jmettraux
++  class RepetitionParser < Parslet::Parser
++    rule(:nl)      { match('[\s]').repeat(1) }
++    rule(:nl?)     { nl.maybe }
++    rule(:sp)      { str(' ').repeat(1) }
++    rule(:sp?)     { str(' ').repeat(0) }
++    rule(:line)    { sp >> str('line') }
++    rule(:body)    { ((line | block) >> nl).repeat(0) }
++    rule(:block)   { sp? >> str('begin') >> sp >> match('[a-z]') >> nl >>
++                     body >> sp? >> str('end') }
++    rule(:blocks)  { nl? >> block >> (nl >> block).repeat(0) >> nl? }
++
++    root(:blocks)
++  end
++  describe RepetitionParser do
++    def di(s)
++      s.strip.to_s.lines.map { |l| l.chomp.strip }.join("\n")
++    end
++
++    it 'parses a block' do
++      subject.parse(%q{
++        begin a
++        end
++      })
++    end
++    it 'parses nested blocks' do
++      subject.parse(%q{
++        begin a
++          begin b
++          end
++        end
++      })
++    end
++    it 'parses successive blocks' do
++      subject.parse(%q{
++        begin a
++        end
++        begin b
++        end
++      })
++    end
++    it 'fails gracefully on a missing end' do
++      error = catch_failed_parse {
++        subject.parse(%q{
++          begin a
++            begin b
++          end
++        }) }
++      
++      di(error.ascii_tree).should == di(%q(
++        Failed to match sequence (NL? BLOCK (NL BLOCK){0, } NL?) at line 2 char 11.
++        `- Failed to match sequence (SP? 'begin' SP [a-z] NL BODY SP? 'end') at line 5 char 9.
++           `- Premature end of input at line 5 char 9.
++        ))
++    end
++    it 'fails gracefully on a missing end (2)' do
++      error = catch_failed_parse {
++        subject.parse(%q{
++          begin a
++          end
++          begin b
++            begin c
++          end
++        }) }
++
++      di(error.ascii_tree).should == di(%q(
++        Failed to match sequence (NL? BLOCK (NL BLOCK){0, } NL?) at line 3 char 14.
++        `- Don't know what to do with "begin b\n  " at line 4 char 11.
++        ))
++    end
++    it 'fails gracefully on a missing end (deepest reporter)' do
++      error = catch_failed_parse {
++        subject.parse(%q{
++            begin a
++            end
++            begin b
++              begin c
++                li
++              end
++            end
++          },
++          :reporter => Parslet::ErrorReporter::Deepest.new) }
++
++      di(error.ascii_tree).should == di(%q(
++        Failed to match sequence (NL? BLOCK (NL BLOCK){0, } NL?) at line 3 char 16.
++        `- Expected "end", but got "li\n" at line 6 char 17.
++        ))
++    end
++  end
++end
+\ No newline at end of file
+diff --git a/spec/acceptance/repetition_and_maybe_spec.rb b/spec/acceptance/repetition_and_maybe_spec.rb
+new file mode 100644
+index 0000000..8bfcab5
+--- /dev/null
++++ b/spec/acceptance/repetition_and_maybe_spec.rb
+@@ -0,0 +1,42 @@
++require 'spec_helper'
++
++describe "Tree output" do
++  extend Parslet
++
++  def self.hash_examples(h)
++    h.each do |atom, expected|
++      it "should convert #{atom} to #{expected.inspect}" do
++        atom.parse(input).should == expected
++      end
++    end
++  end
++
++  context "when parsing the empty string" do
++    let(:input) { '' }
++    hash_examples( 
++      # No naming 
++      str('a').maybe              => '', 
++      str('a').repeat             => '',
++      
++      # Named contents: maybe yields nil
++      str('a').maybe.as(:f)       => {:f => nil},
++      str('a').repeat.as(:f)      => {:f => []}, 
++      
++      # Contents that aren't simple strings
++      (str('a') >> str('b')).maybe.as(:f)     => {:f => nil},
++      (str('a') >> str('b')).repeat.as(:f)    => {:f => []}, 
++      
++      # The other way around: Contents would be tagged, but nil result isn't
++      (str('a') >> str('b')).as(:f).maybe     => '',
++      (str('a') >> str('b')).as(:f).repeat    => ''
++    )
++  end
++  
++  context "when parsing 'aa'" do
++    let(:input) { 'aa' }
++    hash_examples(
++      # since they're not named, repetitions get merged together.
++      str('a').as(:a).repeat >> str('a').as(:a).repeat => [{:a=>'a'},{:a=>'a'}]
++    )
++  end
++end
+\ No newline at end of file
+diff --git a/spec/acceptance/unconsumed_input_spec.rb b/spec/acceptance/unconsumed_input_spec.rb
+new file mode 100644
+index 0000000..ffc48f8
+--- /dev/null
++++ b/spec/acceptance/unconsumed_input_spec.rb
+@@ -0,0 +1,21 @@
++require 'spec_helper'
++
++describe "Unconsumed input:" do
++  class RepeatingBlockParser < Parslet::Parser
++    root :expressions
++    rule(:expressions) { expression.repeat }
++    rule(:expression) { str('(') >> aab >> str(')') }
++    rule(:aab) { str('a').repeat(1) >> str('b') }
++  end
++  describe RepeatingBlockParser do
++    let(:parser) { described_class.new }
++    it "throws annotated error" do
++      error = catch_failed_parse { parser.parse('(aaac)') }
++    end
++    it "doesn't error out if prefix is true" do
++      expect {
++        parser.parse('(aaac)', :prefix => true)
++      }.not_to raise_error
++    end
++  end
++end
+\ No newline at end of file
+diff --git a/spec/parslet/atom_results_spec.rb b/spec/parslet/atom_results_spec.rb
+new file mode 100644
+index 0000000..1dcfafa
+--- /dev/null
++++ b/spec/parslet/atom_results_spec.rb
+@@ -0,0 +1,39 @@
++require 'spec_helper'
++
++describe 'Result of a Parslet#parse' do
++  include Parslet; extend Parslet
++  
++  describe "regression" do
++    [
++      # Behaviour with maybe-nil
++      [str('foo').maybe >> str('bar'), "bar", "bar"],
++      [str('bar') >> str('foo').maybe, "bar", 'bar'], 
++      
++      # These might be hard to understand; look at the result of 
++      #   str.maybe >> str
++      # and 
++      #   str.maybe >> str first. 
++      [(str('f').maybe >> str('b')).repeat, "bb", "bb"],
++      [(str('b') >> str('f').maybe).repeat, "bb", 'bb'], 
++      
++      [str('a').as(:a) >> (str('b') >> str('c').as(:a)).repeat, 'abc', 
++        [{:a=>'a'}, {:a=>'c'}]], 
++      
++      [str('a').as(:a).repeat >> str('b').as(:b).repeat, 'ab', [{:a=>'a'}, {:b=>'b'}]], 
++      
++      # Repetition behaviour / named vs. unnamed
++      [str('f').repeat, '', ''], 
++      [str('f').repeat.as(:f), '', {:f => []}],
++
++      # Maybe behaviour / named vs. unnamed
++      [str('f').maybe, '', ''], 
++      [str('f').maybe.as(:f), '', {:f => nil}],
++    ].each do |parslet, input, result|
++      context "#{parslet.inspect}" do
++        it "should parse \"#{input}\" into \"#{result}\"" do
++          parslet.parse(input).should == result
++        end
++      end
++    end
++  end
++end
+\ No newline at end of file
+diff --git a/spec/parslet/atoms/alternative_spec.rb b/spec/parslet/atoms/alternative_spec.rb
+new file mode 100644
+index 0000000..79bd296
+--- /dev/null
++++ b/spec/parslet/atoms/alternative_spec.rb
+@@ -0,0 +1,26 @@
++require 'spec_helper'
++
++describe Parslet::Atoms::Alternative do
++  include Parslet
++  
++  describe '| shortcut' do
++    let(:alternative) { str('a') | str('b') }
++    
++    context "when chained with different atoms" do
++      before(:each) { 
++        # Chain something else to the alternative parslet. If it modifies the
++        # parslet atom in place, we'll notice: 
++        
++        alternative | str('d')
++      }
++      let!(:chained) { alternative | str('c') }
++      
++      
++      it "is side-effect free" do
++        chained.should parse('c')
++        chained.should parse('a')
++        chained.should_not parse('d')
++      end 
++    end
++  end
++end
+\ No newline at end of file
+diff --git a/spec/parslet/atoms/base_spec.rb b/spec/parslet/atoms/base_spec.rb
+new file mode 100644
+index 0000000..d94bd81
+--- /dev/null
++++ b/spec/parslet/atoms/base_spec.rb
+@@ -0,0 +1,124 @@
++require 'spec_helper'
++
++describe Parslet::Atoms::Base do
++  let(:parslet) { Parslet::Atoms::Base.new }
++  let(:context) { Parslet::Atoms::Context.new }
++
++  describe "<- #try(io)" do
++    it "should raise NotImplementedError" do
++      lambda {
++        parslet.try(flexmock(:io), context, false)
++      }.should raise_error(NotImplementedError)
++    end 
++  end
++  describe "<- #flatten_sequence" do
++    [
++      # 9 possibilities for making a word of 2 letters from the alphabeth of
++      # A(rray), H(ash) and S(tring). Make sure that all results are valid.
++      #
++      ['a', 'b'], 'ab',                             # S S
++      [['a'], ['b']], ['a', 'b'],                   # A A
++      [{:a=>'a'}, {:b=>'b'}], {:a=>'a',:b=>'b'},    # H H
++      
++      [{:a=>'a'}, ['a']], [{:a=>'a'}, 'a'],         # H A
++      [{:a=>'a'}, 's'],   {:a=>'a'},                # H S
++
++      [['a'], {:a=>'a'}], ['a', {:a=>'a'}],         # A H (symmetric to H A)
++      [['a'], 'b'], ['a'],                          # A S 
++
++      ['a', {:b=>'b'}], {:b=>'b'},                  # S H (symmetric to H S)
++      ['a', ['b']], ['b'],                          # S A (symmetric to A S)
++      
++      [nil, ['a']], ['a'],                          # handling of lhs nil
++      [nil, {:a=>'a'}], {:a=>'a'},
++      [['a'], nil], ['a'],                          # handling of rhs nil
++      [{:a=>'a'}, nil], {:a=>'a'}
++    ].each_slice(2) do |sequence, result|
++      context "for " + sequence.inspect do
++        it "should equal #{result.inspect}" do
++          parslet.flatten_sequence(sequence).should == result
++        end
++      end
++    end
++  end
++  describe "<- #flatten_repetition" do
++    def unnamed(obj)
++      parslet.flatten_repetition(obj, false)
++    end
++    
++    it "should give subtrees precedence" do
++      unnamed([[{:a=>"a"}, {:m=>"m"}], {:a=>"a"}]).should == [{:a=>"a"}]
++    end 
++  end
++  describe '#parse(source)' do
++    context "when given something that looks like a source" do
++      let(:source) { flexmock("source lookalike", 
++        :line_and_column => [1,2], 
++        :pos => 1, 
++        :chars_left => 0) }
++      
++      it "should not rewrap in a source" do
++        flexmock(Parslet::Source).
++          should_receive(:new => :source_created).never
++        
++        begin
++          parslet.parse(source) 
++        rescue NotImplementedError
++        end
++      end 
++    end
++  end
++  
++  context "when the parse fails, the exception" do
++    it "should contain a string" do
++      begin
++        Parslet.str('foo').parse('bar')
++      rescue Parslet::ParseFailed => ex
++        ex.message.should be_kind_of(String)
++      end
++    end 
++  end
++  context "when not all input is consumed" do
++    let(:parslet) { Parslet.str('foo') }
++    
++    it "should raise with a proper error message" do
++      error = catch_failed_parse {
++        parslet.parse('foobar') }
++      
++      error.to_s.should == "Don't know what to do with \"bar\" at line 1 char 4."
++    end 
++  end
++  context "when only parsing string prefix" do
++    let(:parslet) { Parslet.str('foo') >> Parslet.str('bar') }
++    
++    it "returns the first half on a prefix parse" do
++      parslet.parse('foobarbaz', :prefix => true).should == 'foobar'
++    end 
++  end
++
++  describe ':reporter option' do
++    let(:parslet) { Parslet.str('test') >> Parslet.str('ing') }
++    let(:reporter) { flexmock(:reporter) }
++    
++    it "replaces the default reporter" do
++      cause = flexmock(:cause)
++      
++      # Two levels of the parse, calling two different error reporting
++      # methods.
++      reporter.
++        should_receive(:err_at).once
++      reporter.
++        should_receive(:err => cause).once
++      
++      # The final cause will be sent the #raise method.
++      cause.
++        should_receive(:raise).once.and_throw(:raise)
++      
++      catch(:raise) {
++        parslet.parse('testung', :reporter => reporter)
++        
++        fail "NEVER REACHED"
++      }
++    end 
++  end
++end
+\ No newline at end of file
+diff --git a/spec/parslet/atoms/capture_spec.rb b/spec/parslet/atoms/capture_spec.rb
+new file mode 100644
+index 0000000..2f3a68a
+--- /dev/null
++++ b/spec/parslet/atoms/capture_spec.rb
+@@ -0,0 +1,21 @@
++require 'spec_helper'
++
++describe Parslet::Atoms::Capture do
++  include Parslet
++  
++  let(:context) { Parslet::Atoms::Context.new(nil) }
++  
++  def inject string, parser
++    source = Parslet::Source.new(string)
++    parser.apply(source, context, true)
++  end
++  
++  it "should capture simple results" do
++    inject 'a', str('a').capture(:a)
++    context.captures[:a].should == 'a'
++  end 
++  it "should capture complex results" do
++    inject 'a', str('a').as(:b).capture(:a)
++    context.captures[:a].should == {:b => 'a'}
++  end 
++end
+\ No newline at end of file
+diff --git a/spec/parslet/atoms/combinations_spec.rb b/spec/parslet/atoms/combinations_spec.rb
+new file mode 100644
+index 0000000..4ea7d44
+--- /dev/null
++++ b/spec/parslet/atoms/combinations_spec.rb
+@@ -0,0 +1,17 @@
++require 'spec_helper'
++
++describe "Parslet combinations" do
++  include Parslet
++
++  describe "repeat" do
++    let(:parslet) { str('a') }
++    
++    describe "(min, max)" do
++      subject { parslet.repeat(1,2) }
++      
++      it { should_not parse("") }
++      it { should parse("a") }
++      it { should parse("aa") }
++    end
++  end
++end
+\ No newline at end of file
+diff --git a/spec/parslet/atoms/dsl_spec.rb b/spec/parslet/atoms/dsl_spec.rb
+new file mode 100644
+index 0000000..8eee35a
+--- /dev/null
++++ b/spec/parslet/atoms/dsl_spec.rb
+@@ -0,0 +1,17 @@
++require 'spec_helper'
++
++describe Parslet::Atoms::DSL do
++  describe "deprecated methods" do
++    let(:parslet) { Parslet.str('foo') }
++    describe "<- #absnt?" do
++      subject { parslet.absnt? }
++      its(:bound_parslet) { should == parslet }
++      its(:positive) { should == false }
++    end
++    describe "<- #prsnt?" do
++      subject { parslet.prsnt? }
++      its(:bound_parslet) { should == parslet }
++      its(:positive) { should == true }
++    end
++  end
++end
+\ No newline at end of file
+diff --git a/spec/parslet/atoms/entity_spec.rb b/spec/parslet/atoms/entity_spec.rb
+new file mode 100644
+index 0000000..a5499bc
+--- /dev/null
++++ b/spec/parslet/atoms/entity_spec.rb
+@@ -0,0 +1,52 @@
++require 'spec_helper'
++
++describe Parslet::Atoms::Entity do
++  context "when constructed with str('bar') inside" do
++    let(:named) { Parslet::Atoms::Entity.new('name', &proc { Parslet.str('bar') }) }
++
++    it "should parse 'bar' without raising exceptions" do
++      named.parse('bar')
++    end 
++    it "should raise when applied to 'foo'" do
++      lambda {
++        named.parse('foo')
++      }.should raise_error(Parslet::ParseFailed)
++    end 
++
++    describe "#inspect" do
++      it "should return the name of the entity" do
++        named.inspect.should == 'NAME'
++      end 
++    end
++  end
++  context "when constructed with empty block" do
++    let(:entity) { Parslet::Atoms::Entity.new('name', &proc { }) }
++    
++    it "should raise NotImplementedError" do
++      lambda {
++        entity.parse('some_string')
++      }.should raise_error(NotImplementedError)
++    end 
++  end
++  
++  context "recursive definition parser" do
++    class RecDefParser
++      include Parslet
++      rule :recdef do
++        str('(') >> atom >> str(')')
++      end
++      rule :atom do
++        str('a') | str('b') | recdef
++      end
++    end
++    let(:parser) { RecDefParser.new }
++    
++    it "should parse balanced parens" do
++      parser.recdef.parse("(((a)))")
++    end
++    it "should not throw 'stack level too deep' when printing errors" do
++      cause = catch_failed_parse { parser.recdef.parse('(((a))') }
++      cause.ascii_tree
++    end
++  end
++end
+\ No newline at end of file
+diff --git a/spec/parslet/atoms/lookahead_spec.rb b/spec/parslet/atoms/lookahead_spec.rb
+new file mode 100644
+index 0000000..ac54ecd
+--- /dev/null
++++ b/spec/parslet/atoms/lookahead_spec.rb
+@@ -0,0 +1,22 @@
++require 'spec_helper'
++
++describe Parslet::Atoms::Lookahead do
++  include Parslet
++  
++  describe 'negative lookahead' do
++    it "influences the error tree" do
++      parser = str('f').absent? >> str('b')
++      cause = catch_failed_parse { parser.parse('f') }
++      
++      cause.ascii_tree.should == "Failed to match sequence (!'f' 'b') at line 1 char 1.\n`- Input should not start with 'f' at line 1 char 1.\n"
++    end 
++  end
++  describe 'positive lookahead' do
++    it "influences the error tree" do
++      parser = str('f').present? >> str('b')
++      cause = catch_failed_parse { parser.parse('b') }
++      
++      cause.ascii_tree.should == "Failed to match sequence (&'f' 'b') at line 1 char 1.\n`- Input should start with 'f' at line 1 char 1.\n"
++    end 
++  end
++end
+\ No newline at end of file
+diff --git a/spec/parslet/atoms/named_spec.rb b/spec/parslet/atoms/named_spec.rb
+new file mode 100644
+index 0000000..98ce14d
+--- /dev/null
++++ b/spec/parslet/atoms/named_spec.rb
+@@ -0,0 +1,4 @@
++require 'spec_helper'
++
++describe Parslet::Atoms::Named do
++end
+\ No newline at end of file
+diff --git a/spec/parslet/atoms/re_spec.rb b/spec/parslet/atoms/re_spec.rb
+new file mode 100644
+index 0000000..44f9cd7
+--- /dev/null
++++ b/spec/parslet/atoms/re_spec.rb
+@@ -0,0 +1,14 @@
++require 'spec_helper'
++
++describe Parslet::Atoms::Re do
++  describe "construction" do
++    include Parslet
++    
++    it "should allow match(str) form" do
++      match('[a]').should be_a(Parslet::Atoms::Re)
++    end 
++    it "should allow match[str] form" do
++      match['a'].should be_a(Parslet::Atoms::Re)
++    end 
++  end
++end
+\ No newline at end of file
+diff --git a/spec/parslet/atoms/scope_spec.rb b/spec/parslet/atoms/scope_spec.rb
+new file mode 100644
+index 0000000..2664bc8
+--- /dev/null
++++ b/spec/parslet/atoms/scope_spec.rb
+@@ -0,0 +1,26 @@
++require 'spec_helper'
++
++describe Parslet::Atoms::Scope do
++  include Parslet
++  include Parslet::Atoms::DSL
++  
++  
++  let(:context) { Parslet::Atoms::Context.new(nil) }
++  let(:captures) { context.captures }
++  
++  def inject string, parser
++    source = Parslet::Source.new(string)
++    parser.apply(source, context, true)
++  end
++  
++  let(:aabb) { 
++    scope {
++      match['ab'].capture(:f) >> dynamic { |s,c| str(c.captures[:f]) }
++    }
++  }
++  it "keeps values of captures outside" do
++    captures[:f] = 'old_value'
++    inject 'aa', aabb
++    captures[:f].should == 'old_value'
++  end 
++end
+\ No newline at end of file
+diff --git a/spec/parslet/atoms/sequence_spec.rb b/spec/parslet/atoms/sequence_spec.rb
+new file mode 100644
+index 0000000..c2cec13
+--- /dev/null
++++ b/spec/parslet/atoms/sequence_spec.rb
+@@ -0,0 +1,28 @@
++require 'spec_helper'
++
++describe Parslet::Atoms::Sequence do
++  include Parslet
++  
++  let(:sequence) { described_class.new }
++  
++  describe '>> shortcut' do
++    let(:sequence) { str('a') >> str('b') }
++    
++    context "when chained with different atoms" do
++      before(:each) { 
++        # Chain something else to the sequence parslet. If it modifies the
++        # parslet atom in place, we'll notice: 
++        
++        sequence >> str('d')
++      }
++      let!(:chained) { sequence >> str('c') }
++      
++      
++      it "is side-effect free" do
++        chained.should parse('abc')
++        chained.should_not parse('abdc')
++      end 
++    end
++    
++  end
++end
+diff --git a/spec/parslet/atoms/str_spec.rb b/spec/parslet/atoms/str_spec.rb
+new file mode 100644
+index 0000000..455f82d
+--- /dev/null
++++ b/spec/parslet/atoms/str_spec.rb
+@@ -0,0 +1,15 @@
++# Encoding: UTF-8
++
++require 'spec_helper'
++
++describe Parslet::Atoms::Str do
++  def str(s)
++    described_class.new(s)
++  end
++  
++  describe 'regression #1: multibyte characters' do
++    it "parses successfully (length check works)" do
++      str('あああ').should parse('あああ')
++    end 
++  end
++end
+\ No newline at end of file
+diff --git a/spec/parslet/atoms/visitor_spec.rb b/spec/parslet/atoms/visitor_spec.rb
+new file mode 100644
+index 0000000..c195cee
+--- /dev/null
++++ b/spec/parslet/atoms/visitor_spec.rb
+@@ -0,0 +1,80 @@
++require 'spec_helper'
++
++describe Parslet::Atoms do
++  include Parslet
++  let(:visitor) { flexmock(:visitor) }
++  
++  describe Parslet::Atoms::Str do
++    let(:parslet) { str('foo') }
++    it "should call back visitor" do
++      visitor.should_receive(:visit_str).with('foo').once
++      
++      parslet.accept(visitor)
++    end 
++  end
++  describe Parslet::Atoms::Re do
++    let(:parslet) { match['abc'] }
++    it "should call back visitor" do
++      visitor.should_receive(:visit_re).with('[abc]').once
++      
++      parslet.accept(visitor)
++    end 
++  end
++  describe Parslet::Atoms::Sequence do
++    let(:parslet) { str('a') >> str('b') }
++    it "should call back visitor" do
++      visitor.should_receive(:visit_sequence).with(Array).once
++      
++      parslet.accept(visitor)
++    end 
++  end
++  describe Parslet::Atoms::Repetition do
++    let(:parslet) { str('a').repeat(1,2) }
++    it "should call back visitor" do
++      visitor.should_receive(:visit_repetition).with(:repetition, 1, 2, Parslet::Atoms::Base).once
++      
++      parslet.accept(visitor)
++    end 
++  end
++  describe Parslet::Atoms::Alternative do
++    let(:parslet) { str('a') | str('b') }
++    it "should call back visitor" do
++      visitor.should_receive(:visit_alternative).with(Array).once
++      
++      parslet.accept(visitor)
++    end 
++  end
++  describe Parslet::Atoms::Named do
++    let(:parslet) { str('a').as(:a) }
++    it "should call back visitor" do
++      visitor.should_receive(:visit_named).with(:a, Parslet::Atoms::Base).once
++      
++      parslet.accept(visitor)
++    end 
++  end
++  describe Parslet::Atoms::Entity do
++    let(:parslet) { Parslet::Atoms::Entity.new('foo', &lambda {}) }
++    it "should call back visitor" do
++      visitor.should_receive(:visit_entity).with('foo', Proc).once
++      
++      parslet.accept(visitor)
++    end 
++  end
++  describe Parslet::Atoms::Lookahead do
++    let(:parslet) { str('a').absent? }
++    it "should call back visitor" do
++      visitor.should_receive(:visit_lookahead).with(false, Parslet::Atoms::Base).once
++      
++      parslet.accept(visitor)
++    end 
++  end
++  describe "< Parslet::Parser" do
++    let(:parslet) { Parslet::Parser.new }
++    it "calls back to visitor" do
++      visitor.should_receive(:visit_parser).with(:root).once
++      
++      flexmock(parslet, :root => :root)
++      parslet.accept(visitor)
++    end 
++  end
++end
+\ No newline at end of file
+diff --git a/spec/parslet/atoms_spec.rb b/spec/parslet/atoms_spec.rb
+new file mode 100644
+index 0000000..cd247ba
+--- /dev/null
++++ b/spec/parslet/atoms_spec.rb
+@@ -0,0 +1,429 @@
++require 'spec_helper'
++
++require 'timeout'
++require 'parslet'
++
++describe Parslet do
++  def not_parse
++    raise_error(Parslet::ParseFailed)
++  end
++  
++  include Parslet
++  extend Parslet
++
++  def src(str); Parslet::Source.new str; end
++  let(:context) { Parslet::Atoms::Context.new }
++  
++  describe "match('[abc]')" do
++    attr_reader :parslet
++    before(:each) do
++      @parslet = match('[abc]')
++    end
++    
++    it "should parse {a,b,c}" do
++      parslet.parse('a')
++      parslet.parse('b')
++      parslet.parse('c')
++    end 
++    it "should not parse d" do
++      cause = catch_failed_parse {
++        parslet.parse('d')
++      }
++      cause.to_s.should == "Failed to match [abc] at line 1 char 1."
++    end 
++    it "should print as [abc]" do
++      parslet.inspect.should == "[abc]"
++    end 
++  end
++  describe "match(['[a]').repeat(3)" do
++    attr_reader :parslet
++    before(:each) do
++      @parslet = match('[a]').repeat(3)
++    end
++    
++    context "when failing on input 'aa'" do
++      let!(:cause) {
++        catch_failed_parse { parslet.parse('aa') }
++      }
++      it "should have a relevant cause" do
++        cause.to_s.should == "Expected at least 3 of [a] at line 1 char 1."
++      end 
++      it "should have a tree with 2 nodes" do
++        cause.children.should have(1).elements
++      end 
++    end
++    it "should succeed on 'aaa'" do
++      parslet.parse('aaa')
++    end 
++    it "should succeed on many 'a'" do
++      parslet.parse('a'*100)
++    end 
++    it "should inspect as [a]{3, }" do
++      parslet.inspect.should == "[a]{3, }"
++    end
++  end
++  describe "str('foo')" do
++    attr_reader :parslet
++    before(:each) do
++      @parslet = str('foo')
++    end
++    
++    it "should parse 'foo'" do
++      parslet.parse('foo')
++    end
++    it "should not parse 'bar'"  do
++      cause = catch_failed_parse { parslet.parse('bar') }
++      cause.to_s.should == 
++        "Expected \"foo\", but got \"bar\" at line 1 char 1."
++    end
++    it "should inspect as 'foo'" do
++      parslet.inspect.should == "'foo'"
++    end 
++  end
++  describe "str('foo').maybe" do
++    let(:parslet) { str('foo').maybe }
++
++    it "should parse a foo" do
++      parslet.parse('foo')
++    end
++    it "should leave pos untouched if there is no foo" do
++      source = src('bar')
++      parslet.apply(source, context)
++      source.pos.should == 0
++    end
++    it "should inspect as 'foo'?" do
++      parslet.inspect.should == "'foo'?"
++    end 
++    context "when parsing 'foo'" do
++      subject { parslet.parse('foo') }
++      
++      it { should == 'foo' }
++    end
++    context "when parsing ''" do
++      subject { parslet.parse('') } 
++      
++      it { should == '' } 
++    end
++  end
++  describe "str('foo') >> str('bar')" do
++    let(:parslet) { str('foo') >> str('bar') }
++    
++    context "when it fails on input 'foobaz'" do
++      let!(:cause) {
++        catch_failed_parse { parslet.parse('foobaz') }
++      }
++
++      it "should not parse 'foobaz'" do
++        cause.to_s.should == "Failed to match sequence ('foo' 'bar') at line 1 char 4."
++      end
++      it "should have 2 nodes in error tree" do
++        cause.should have(1).children
++      end 
++    end
++    it "should parse 'foobar'" do
++      parslet.parse('foobar')
++    end
++    it "should inspect as ('foo' 'bar')" do
++      parslet.inspect.should == "'foo' 'bar'"
++    end 
++  end
++  describe "str('foo') | str('bar')" do
++    attr_reader :parslet
++    before(:each) do
++      @parslet = str('foo') | str('bar')
++    end
++    
++    context "when failing on input 'baz'" do
++      let!(:cause) {
++        catch_failed_parse { parslet.parse('baz') }
++      }
++
++      it "should have a sensible cause" do
++        cause.to_s.should == "Expected one of ['foo', 'bar'] at line 1 char 1."
++      end   
++      it "should have an error tree with 3 nodes" do
++        cause.should have(2).children
++      end 
++    end
++    
++    it "should accept 'foo'" do
++      parslet.parse('foo')
++    end
++    it "should accept 'bar'" do
++      parslet.parse('bar')
++    end
++    it "should inspect as ('foo' / 'bar')" do
++      parslet.inspect.should == "'foo' / 'bar'"
++    end 
++  end
++  describe "str('foo').present? (positive lookahead)" do
++    attr_reader :parslet
++    before(:each) do
++      @parslet = str('foo').present?
++    end
++    
++    it "should inspect as &'foo'" do
++      parslet.inspect.should == "&'foo'"
++    end 
++    context "when fed 'foo'" do
++      it "should parse" do
++        success, _ = parslet.apply(src('foo'), context)
++        success.should == true
++      end
++      it "should not change input position" do
++        source = src('foo')
++        parslet.apply(source, context)
++        source.pos.should == 0
++      end
++    end
++    context "when fed 'bar'" do
++      it "should not parse" do
++        lambda { parslet.parse('bar') }.should not_parse
++      end
++    end
++    describe "<- #parse" do
++      it "should return nil" do
++        parslet.apply(src('foo'), context).should == [true, nil]
++      end 
++    end
++  end
++  describe "str('foo').absent? (negative lookahead)" do
++    attr_reader :parslet
++    before(:each) do
++      @parslet = str('foo').absent?
++    end
++    
++    it "should inspect as !'foo'" do
++      parslet.inspect.should == "!'foo'"
++    end 
++    context "when fed 'bar'" do
++      it "should parse" do
++        parslet.apply(src('bar'), context).should == [true, nil]
++      end
++      it "should not change input position" do
++        source = src('bar')
++        parslet.apply(source, context)
++        source.pos.should == 0
++      end
++    end
++    context "when fed 'foo'" do
++      it "should not parse" do
++        lambda { parslet.parse('foo') }.should not_parse
++      end
++    end
++  end
++  describe "non greedy matcher combined with greedy matcher (possible loop)" do
++    attr_reader :parslet
++    before(:each) do
++      # repeat will always succeed, since it has a minimum of 0. It will not
++      # modify input position in that case. absent? will, depending on
++      # implementation, match as much as possible and call its inner element
++      # again. This leads to an infinite loop. This example tests for the 
++      # absence of that loop. 
++      @parslet = str('foo').repeat.maybe
++    end
++    
++    it "should not loop infinitely" do
++      lambda {
++        timeout(1) { parslet.parse('bar') }
++      }.should raise_error(Parslet::ParseFailed)
++    end 
++  end
++  describe "any" do
++    attr_reader :parslet
++    before(:each) do
++      @parslet = any
++    end
++    
++    it "should match" do
++      parslet.parse('.')
++    end 
++    it "should consume one char" do
++      source = src('foo')
++      parslet.apply(source, context)
++      source.pos.should == 1
++    end 
++  end
++  describe "eof behaviour" do
++    context "when the pattern just doesn't consume the input" do
++      let (:parslet) { any }
++
++      it "should fail the parse" do
++        cause = catch_failed_parse { parslet.parse('..') }
++        cause.to_s.should == "Don't know what to do with \".\" at line 1 char 2."
++      end 
++    end
++    context "when the pattern doesn't match the input" do
++      let (:parslet) { (str('a')).repeat(1) }
++      attr_reader :exception
++      before(:each) do
++        begin 
++          parslet.parse('a.')
++        rescue => @exception
++        end
++      end
++
++      it "raises Parslet::ParseFailed" do
++        # ParseFailed here, because the input doesn't match the parser grammar. 
++        exception.should be_kind_of(Parslet::ParseFailed)
++      end 
++      it "has the correct error message" do
++        exception.message.should == \
++          "Extra input after last repetition at line 1 char 2."
++      end 
++    end
++  end
++  
++  describe "<- #as(name)" do
++    context "str('foo').as(:bar)" do
++      it "should return :bar => 'foo'" do
++        str('foo').as(:bar).parse('foo').should == { :bar => 'foo' }
++      end 
++    end
++    context "match('[abc]').as(:name)" do
++      it "should return :name => 'b'" do
++        match('[abc]').as(:name).parse('b').should == { :name => 'b' }
++      end 
++    end
++    context "match('[abc]').repeat.as(:name)" do
++      it "should return collated result ('abc')" do
++        match('[abc]').repeat.as(:name).
++          parse('abc').should == { :name => 'abc' }
++      end
++    end
++    context "(str('a').as(:a) >> str('b').as(:b)).as(:c)" do
++      it "should return a hash of hashes" do
++        (str('a').as(:a) >> str('b').as(:b)).as(:c).
++          parse('ab').should == {
++            :c => {
++              :a => 'a', 
++              :b => 'b'
++            }
++          }
++      end 
++    end
++    context "(str('a').as(:a) >> str('ignore') >> str('b').as(:b))" do
++      it "should correctly flatten (leaving out 'ignore')" do
++        (str('a').as(:a) >> str('ignore') >> str('b').as(:b)).
++          parse('aignoreb').should == 
++          {
++            :a => 'a', 
++            :b => 'b'
++          }
++      end
++    end
++    
++    context "(str('a') >> str('ignore') >> str('b')) (no .as(...))" do
++      it "should return simply the original string" do
++        (str('a') >> str('ignore') >> str('b')).
++          parse('aignoreb').should == 'aignoreb'
++      end 
++    end
++    context "str('a').as(:a) >> str('b').as(:a)" do
++      attr_reader :parslet
++      before(:each) do
++        @parslet = str('a').as(:a) >> str('b').as(:a)
++      end
++      
++      it "should issue a warning that a key is being overwritten in merge" do
++        flexmock(parslet).
++          should_receive(:warn).once
++        parslet.parse('ab').should == { :a => 'b' }
++      end
++      it "should return :a => 'b'" do
++        flexmock(parslet).
++          should_receive(:warn)
++          
++        parslet.parse('ab').should == { :a => 'b' }
++      end  
++    end
++    context "str('a').absent?" do
++      it "should return something in merge, even though it is nil" do
++        (str('a').absent? >> str('b').as(:b)).
++          parse('b').should == {:b => 'b'}
++      end
++    end
++    context "str('a').as(:a).repeat" do
++      it "should return an array of subtrees" do
++        str('a').as(:a).repeat.
++          parse('aa').should == [{:a=>'a'}, {:a=>'a'}]
++      end 
++    end
++  end
++  describe "<- #flatten(val)" do
++    def call(val)
++      dummy = str('a')
++      flexmock(dummy, :warn => nil)
++      dummy.flatten(val)
++    end
++    
++    [
++      # In absence of named subtrees: ----------------------------------------
++      # Sequence or Repetition
++      [ [:sequence, 'a', 'b'], 'ab' ], 
++      [ [:repetition, 'a', 'a'], 'aa' ],
++            
++      # Nested inside another node
++      [ [:sequence, [:sequence, 'a', 'b']], 'ab' ],
++      # Combined with lookahead (nil)
++      [ [:sequence, nil, 'a'], 'a' ],
++                  
++      # Including named subtrees ---------------------------------------------
++      # Atom: A named subtree
++      [ {:a=>'a'}, {:a=>'a'} ],
++      # Composition of subtrees
++      [ [:sequence, {:a=>'a'},{:b=>'b'}], {:a=>'a',:b=>'b'} ],
++      # Mixed subtrees :sequence of :repetition yields []
++      [ [:sequence, [:repetition, {:a => 'a'}], {:a => 'a'} ], [{:a=>'a'}, {:a=>'a'}]],
++      [ [:sequence, {:a => 'a'},[:repetition, {:a => 'a'}] ], [{:a=>'a'}, {:a=>'a'}]],
++      [ [:sequence, [:repetition, {:a => 'a'}],[:repetition, {:a => 'a'}] ], [{:a=>'a'}, {:a=>'a'}]],
++      # Repetition
++      [ [:repetition, [:repetition, {:a=>'a'}], [:repetition, {:a=>'a'}]], 
++        [{:a => 'a'}, {:a => 'a'}]],
++      [ [:repetition, {:a=>'a'}, 'a', {:a=>'a'}], [{:a=>'a'}, {:a=>'a'}]],
++      [ [:repetition, {:a=>'a'}, [:repetition, {:b=>'b'}]], [{:a=>'a'}] ],
++      
++      # Some random samples --------------------------------------------------
++      [ [:sequence, {:a => :b, :b => :c}], {:a=>:b, :b=>:c} ], 
++      [ [:sequence, {:a => :b}, 'a', {:c=>:d}], {:a => :b, :c=>:d} ], 
++      [ [:repetition, {:a => :b}, 'a', {:c=>:d}], [{:a => :b}, {:c=>:d}] ], 
++      [ [:sequence, {:a => :b}, {:a=>:d}], {:a => :d} ], 
++      [ [:sequence, {:a=>:b}, [:sequence, [:sequence, "\n", nil]]], {:a=>:b} ], 
++      [ [:sequence, nil, " "], ' ' ], 
++    ].each do |input, output|
++      it "should transform #{input.inspect} to #{output.inspect}" do
++        call(input).should == output
++      end
++    end
++  end
++
++  describe "combinations thereof (regression)" do
++    sucess =[
++      [(str('a').repeat >> str('b').repeat), 'aaabbb'] 
++    ].each do |(parslet, input)|
++      describe "#{parslet.inspect} applied to #{input.inspect}" do
++        it "should parse successfully" do
++          parslet.parse(input)
++        end
++      end 
++    end
++
++    inspection=[
++      [str('a'),                              "'a'"                 ], 
++      [(str('a') | str('b')).maybe,           "('a' / 'b')?"        ], 
++      [(str('a') >> str('b')).maybe,          "('a' 'b')?"          ], 
++      [str('a').maybe.maybe,                  "'a'??"               ], 
++      [(str('a')>>str('b')).maybe.maybe,      "('a' 'b')??"         ], 
++      [(str('a') >> (str('b') | str('c'))),   "'a' ('b' / 'c')"], 
++      
++      [str('a') >> str('b').repeat,           "'a' 'b'{0, }"        ], 
++      [(str('a')>>str('b')).repeat,           "('a' 'b'){0, }"      ]  
++    ].each do |(parslet, inspect_output)|
++      context "regression for #{parslet.inspect}" do
++        it "should inspect correctly as #{inspect_output}" do
++          parslet.inspect.should == inspect_output
++        end 
++      end
++    end
++  end
++end
+\ No newline at end of file
+diff --git a/spec/parslet/convenience_spec.rb b/spec/parslet/convenience_spec.rb
+new file mode 100644
+index 0000000..5a62b83
+--- /dev/null
++++ b/spec/parslet/convenience_spec.rb
+@@ -0,0 +1,48 @@
++require 'spec_helper'
++
++describe 'parslet/convenience' do
++  require 'parslet/convenience'
++  include Parslet
++  
++  class FooParser < Parslet::Parser
++    rule(:foo) { str('foo') }
++    root(:foo)
++  end
++  
++  describe 'parse_with_debug' do
++    let(:parser) { flexmock FooParser.new }
++    context 'internal' do
++      before(:each) do
++        # Suppress output.
++        #
++        parser.should_receive(:puts)
++      end
++      it 'should exist' do
++        lambda { parser.parse_with_debug('anything') }.should_not raise_error(NoMethodError)
++      end
++      it 'should catch ParseFailed exceptions' do
++        lambda { parser.parse_with_debug('bar') }.should_not raise_error(Parslet::ParseFailed)
++      end
++      it 'should parse correct input like #parse' do
++        lambda { parser.parse_with_debug('foo') }.should_not raise_error
++      end
++    end
++    context 'output' do
++      it 'should puts once for tree output' do
++        parser.should_receive(:puts).once
++        
++        parser.parse_with_debug('incorrect')
++      end
++      it "should puts once for the error on unconsumed input" do
++        parser.should_receive(:puts).once
++
++        parser.parse_with_debug('foobar')
++      end 
++    end
++    
++    it "should work for all parslets" do
++      str('foo').parse_with_debug('foo')
++      match['bar'].parse_with_debug('a')
++    end 
++  end
++end
+\ No newline at end of file
+diff --git a/spec/parslet/error_reporter/deepest_spec.rb b/spec/parslet/error_reporter/deepest_spec.rb
+new file mode 100644
+index 0000000..e3000f0
+--- /dev/null
++++ b/spec/parslet/error_reporter/deepest_spec.rb
+@@ -0,0 +1,73 @@
++require 'spec_helper'
++
++describe Parslet::ErrorReporter::Deepest do
++  let(:reporter) { described_class.new }
++  let(:fake_source) { flexmock('source') }
++  
++  describe '#err' do
++    before(:each) { fake_source.should_receive(
++      :pos => 13, 
++      :line_and_column => [1,1]) }
++    
++    it "returns the deepest cause" do
++      flexmock(reporter).
++        should_receive(:deepest).and_return(:deepest)
++      reporter.err('parslet', fake_source, 'message').
++        should == :deepest
++    end 
++  end
++  describe '#err_at' do
++    before(:each) { fake_source.should_receive(
++      :pos => 13, 
++      :line_and_column => [1,1]) }
++
++    it "returns the deepest cause" do
++      flexmock(reporter).
++        should_receive(:deepest).and_return(:deepest)
++      reporter.err('parslet', fake_source, 'message', 13).
++        should == :deepest
++    end
++  end
++  describe '#deepest(cause)' do
++    def fake_cause(pos=13, children=nil)
++      flexmock('cause' + pos.to_s, :pos => pos, :children => children)
++    end
++    
++    context "when there is no deepest cause yet" do
++      let(:cause) { fake_cause }
++      it "returns the given cause" do
++        reporter.deepest(cause).should == cause
++      end
++    end
++    context "when the previous cause is deeper (no relationship)" do
++      let(:previous) { fake_cause }
++      before(:each) { 
++        reporter.deepest(previous) }
++      
++      it "returns the previous cause" do
++        reporter.deepest(fake_cause(12)).
++          should == previous
++      end 
++    end
++    context "when the previous cause is deeper (child)" do
++      let(:previous) { fake_cause }
++      before(:each) { 
++        reporter.deepest(previous) }
++        
++      it "returns the given cause" do
++        given = fake_cause(12, [previous])
++        reporter.deepest(given).should == given
++      end 
++    end
++    context "when the previous cause is shallower" do
++      before(:each) { 
++        reporter.deepest(fake_cause) }
++      
++      it "stores the cause as deepest" do
++        deeper = fake_cause(14)
++        reporter.deepest(deeper)
++        reporter.deepest_cause.should == deeper
++      end
++    end
++  end
++end
+\ No newline at end of file
+diff --git a/spec/parslet/error_reporter/tree_spec.rb b/spec/parslet/error_reporter/tree_spec.rb
+new file mode 100644
+index 0000000..a8b08ab
+--- /dev/null
++++ b/spec/parslet/error_reporter/tree_spec.rb
+@@ -0,0 +1,7 @@
++require 'spec_helper'
++
++require 'parslet/error_reporter'
++
++describe Parslet::ErrorReporter::Tree do
++  
++end
+\ No newline at end of file
+diff --git a/spec/parslet/export_spec.rb b/spec/parslet/export_spec.rb
+new file mode 100644
+index 0000000..8f12152
+--- /dev/null
++++ b/spec/parslet/export_spec.rb
+@@ -0,0 +1,67 @@
++require 'spec_helper'
++
++describe Parslet::Parser, "exporting to other lingos" do
++  class MiniLisp < Parslet::Parser
++    root :expression
++    rule(:expression) {
++      space? >> str('(') >> space? >> body >> str(')')
++    }
++    
++    rule(:body) {
++      (expression | identifier | float | integer | string).repeat.as(:exp)
++    }
++    
++    rule(:space) {
++      match('\s').repeat(1)
++    }
++    rule(:space?) {
++      space.maybe
++    }
++    
++    rule(:identifier) { 
++      (match('[a-zA-Z=*]') >> match('[a-zA-Z=*_]').repeat).as(:identifier) >> space?
++    }
++    
++    rule(:float) { 
++      (
++        integer >> (
++          str('.') >> match('[0-9]').repeat(1) |
++          str('e') >> match('[0-9]').repeat(1)
++        ).as(:e)
++      ).as(:float) >> space?
++    }
++    
++    rule(:integer) {
++      ((str('+') | str('-')).maybe >> match("[0-9]").repeat(1)).as(:integer) >> space?
++    }
++    
++    rule(:string) {
++      str('"') >> (
++        str('\\') >> any |
++        str('"').absent? >> any 
++      ).repeat.as(:string) >> str('"') >> space?
++    }
++  end
++
++  # I only update the files once I've verified the new syntax to work with 
++  # the respective tools. This is more an acceptance test than a real spec. 
++
++  describe "<- #to_citrus" do
++    let(:citrus) { File.read(
++      File.join(File.dirname(__FILE__), 'minilisp.citrus'))
++    }
++    it "should be valid citrus syntax" do
++      # puts MiniLisp.new.to_citrus
++      MiniLisp.new.to_citrus.should == citrus 
++    end 
++  end
++  describe "<- #to_treetop" do
++    let(:treetop) { File.read(
++      File.join(File.dirname(__FILE__), 'minilisp.tt'))
++    }
++    it "should be valid treetop syntax" do
++      # puts MiniLisp.new.to_treetop
++      MiniLisp.new.to_treetop.should == treetop
++    end 
++  end
++end
+\ No newline at end of file
+diff --git a/spec/parslet/expression/treetop_spec.rb b/spec/parslet/expression/treetop_spec.rb
+new file mode 100644
+index 0000000..0c0340f
+--- /dev/null
++++ b/spec/parslet/expression/treetop_spec.rb
+@@ -0,0 +1,74 @@
++require 'spec_helper'
++
++require 'parslet'
++
++describe Parslet::Expression::Treetop do
++  include Parslet
++
++  describe "positive samples" do
++    [ # pattern             # input
++      "'abc'",              'abc', 
++      "...",                'abc', 
++      "[1-4]",              '3',
++      
++      "'abc'?",             'abc', 
++      "'abc'?",             '', 
++      
++      "('abc')",            'abc', 
++      
++      "'a' 'b'",            'ab', 
++      "'a' ('b')",          'ab', 
++      
++      "'a' / 'b'",          'a', 
++      "'a' / 'b'",          'b', 
++      
++      "'a'*",               'aaa', 
++      "'a'*",               '', 
++
++      "'a'+",               'aa', 
++      "'a'+",               'a', 
++      
++      "'a'{1,2}",           'a',
++      "'a'{1,2}",           'aa',
++
++      "'a'{1,}",            'a',
++      "'a'{1,}",            'aa',
++
++      "'a'{,2}",            '',
++      "'a'{,2}",            'a',
++      "'a'{,2}",            'aa',
++    ].each_slice(2) do |pattern, input|
++      context "exp(#{pattern.inspect})" do
++        let(:parslet) { exp(pattern) }
++        subject { parslet }
++        it { should parse(input) }
++        context "string representation" do
++          subject { exp(parslet.to_s) }
++          it { should parse(input, :trace => true) }
++        end
++      end
++    end
++  end
++  describe "negative samples" do
++    [ # pattern             # input
++      "'abc'",              'cba', 
++      "[1-4]",              '5',
++      
++      "'a' / 'b'",          'c', 
++      
++      "'a'+",               '',
++      
++      "'a'{1,2}",           '',
++      "'a'{1,2}",           'aaa',
++      
++      "'a'{1,}",            '',
++
++      "'a'{,2}",            'aaa',
++    ].each_slice(2) do |pattern, input|
++      context "exp(#{pattern.inspect})" do
++        subject { exp(pattern) }
++        it { should_not parse(input) }
++      end
++    end
++  end
++end
+\ No newline at end of file
+diff --git a/spec/parslet/minilisp.citrus b/spec/parslet/minilisp.citrus
+new file mode 100644
+index 0000000..fea3d2e
+--- /dev/null
++++ b/spec/parslet/minilisp.citrus
+@@ -0,0 +1,29 @@
++grammar MiniLisp
++  rule root
++    (expression)
++  end
++  rule expression
++    ((space_p) "(" (space_p) (body) ")")
++  end
++  rule space_p
++    (space)0*1
++  end
++  rule body
++    ((expression) | (identifier) | (float) | (integer) | (string))0*
++  end
++  rule space
++    \s1*
++  end
++  rule identifier
++    (([a-zA-Z=*] [a-zA-Z=*_]0*) (space_p))
++  end
++  rule float
++    (((integer) (("." [0-9]1*) | ("e" [0-9]1*))) (space_p))
++  end
++  rule integer
++    ((("+" | "-")0*1 [0-9]1*) (space_p))
++  end
++  rule string
++    ("\"" (("\\" .) | (!"\"" .))0* "\"" (space_p))
++  end
++end
+diff --git a/spec/parslet/minilisp.tt b/spec/parslet/minilisp.tt
+new file mode 100644
+index 0000000..e0ada6d
+--- /dev/null
++++ b/spec/parslet/minilisp.tt
+@@ -0,0 +1,29 @@
++grammar MiniLisp
++  rule root
++    (expression)
++  end
++  rule expression
++    ((space_p) "(" (space_p) (body) ")")
++  end
++  rule space_p
++    (space)0..1
++  end
++  rule body
++    ((expression) / (identifier) / (float) / (integer) / (string))0..
++  end
++  rule space
++    \s1..
++  end
++  rule identifier
++    (([a-zA-Z=*] [a-zA-Z=*_]0..) (space_p))
++  end
++  rule float
++    (((integer) (("." [0-9]1..) / ("e" [0-9]1..))) (space_p))
++  end
++  rule integer
++    ((("+" / "-")0..1 [0-9]1..) (space_p))
++  end
++  rule string
++    ("\"" (("\\" .) / (!"\"" .))0.. "\"" (space_p))
++  end
++end
+diff --git a/spec/parslet/parser_spec.rb b/spec/parslet/parser_spec.rb
+new file mode 100644
+index 0000000..c7e67b8
+--- /dev/null
++++ b/spec/parslet/parser_spec.rb
+@@ -0,0 +1,31 @@
++require 'spec_helper'
++
++describe Parslet::Parser do
++  include Parslet
++  class FooParser < Parslet::Parser
++    rule(:foo) { str('foo') }
++    root(:foo)
++  end
++  
++  describe "<- .root" do
++    parser = Class.new(Parslet::Parser)
++    parser.root :root_parslet
++    
++    it "should have defined a 'root' method, returning the root" do
++      parser_instance = parser.new
++      flexmock(parser_instance).should_receive(:root_parslet => :answer)
++      
++      parser_instance.root.should == :answer
++    end 
++  end
++  it "should parse 'foo'" do
++    FooParser.new.parse('foo').should == 'foo'
++  end 
++  context "composition" do
++    let(:parser) { FooParser.new }
++    it "should allow concatenation" do
++      composite = parser >> str('bar')
++      composite.should parse('foobar')
++    end
++  end
++end
+\ No newline at end of file
+diff --git a/spec/parslet/parslet_spec.rb b/spec/parslet/parslet_spec.rb
+new file mode 100644
+index 0000000..aea9ec4
+--- /dev/null
++++ b/spec/parslet/parslet_spec.rb
+@@ -0,0 +1,38 @@
++require 'spec_helper'
++
++describe Parslet do
++  include Parslet
++  
++  describe Parslet::ParseFailed do
++    it "should be caught by an empty rescue" do
++      begin
++        raise Parslet::ParseFailed
++      rescue
++        # Success! Ignore this.
++      end
++    end 
++  end
++  describe "<- .rule" do
++    # Rules define methods. This can be easily tested by defining them right 
++    # here. 
++    context "empty rule" do
++      rule(:empty) { }
++      
++      it "should raise a NotImplementedError" do
++        lambda {
++          empty.parslet
++        }.should raise_error(NotImplementedError)
++      end 
++    end
++    
++    context "containing 'any'" do
++      rule(:any_rule) { any }
++      subject { any_rule }
++      
++      it { should be_a Parslet::Atoms::Entity }
++      it "should memoize the returned instance" do
++        any_rule.object_id.should == any_rule.object_id
++      end 
++    end
++  end
++end
+\ No newline at end of file
+diff --git a/spec/parslet/pattern_spec.rb b/spec/parslet/pattern_spec.rb
+new file mode 100644
+index 0000000..2b4756f
+--- /dev/null
++++ b/spec/parslet/pattern_spec.rb
+@@ -0,0 +1,268 @@
++require 'spec_helper'
++
++require 'parslet'
++
++describe Parslet::Pattern do
++  include Parslet
++  
++  # These two factory methods help make the specs more robust to interface
++  # changes. They also help to label trees (t) and patterns (p).
++  def p(pattern)
++    Parslet::Pattern.new(pattern)
++  end
++  def t(obj)
++    obj
++  end
++  
++  # Tries to match pattern to the tree, and verifies the bindings hash. Don't
++  # use this for new examples.
++  #
++  RSpec::Matchers.define :match_with_bind do |pattern, exp_bindings|
++    failure_message_for_should do |tree|
++      "expected #{pattern.inspect} to match #{tree.inspect}, but didn't. (block wasn't called or not correctly)"
++    end
++    match do |tree|
++      bindings = Parslet::Pattern.new(pattern).match(tree)
++      bindings && bindings == exp_bindings
++    end
++  end
++
++  # This is the more modern version of verifying a match: (uses 'exp'
++  # implicitly). Checks for a match of pattern in +exp+ and yields the
++  # matched variables.
++  #
++  def with_match_locals(pattern, &block) 
++    bindings = p(pattern).match(exp)
++    bindings.should_not be_nil
++    
++    block.call(bindings) if block
++  end
++  
++  # Can't use #match here, so I went to the Thesaurus.
++  #
++  RSpec::Matchers.define :detect do |pattern|
++    match do |tree|
++      bindings = Parslet::Pattern.new(pattern).match(tree)
++
++      bindings ? true : false
++    end
++  end
++  
++  describe "<- #match" do
++    context "injecting bindings" do
++      let(:pattern) { p(simple(:x)) }
++      
++      it "should not modify the original bindings hash" do
++        h = {}
++        b=pattern.match('a', h)
++        h.size.should == 0
++        b.size.should == 1
++      end
++      it "should return nil when no match succeeds" do
++        pattern.match([], :foo => :bar).should be_nil
++      end
++      context "when matching simple(:x) against 'a'" do
++        let(:bindings) { pattern.match(t('a'), :foo => :bar) }
++        
++        before(:each) { bindings.should_not be_nil }
++        it "should return the injected bindings" do
++          bindings[:foo].should == :bar
++        end
++        it "should return the new bindings" do  
++          bindings[:x].should == 'a'
++        end
++      end
++    end
++    context "simple strings" do
++      let(:exp) { 'aaaa' }
++
++      it "should match simple strings" do
++        exp.should match_with_bind(simple(:x), :x => 'aaaa')
++      end 
++    end
++    context "simple hash {:a => 'b'}" do
++      attr_reader :exp
++      before(:each) do
++        @exp = t(:a => 'b')
++      end
++
++      it "should not match {:a => simple(:x), :b => simple(:y)}" do
++        exp.should_not detect(:a => simple(:x), :b => simple(:y))
++      end
++      it "should match {:a => simple(:x)}, binding 'x' to the first argument" do
++        exp.should match_with_bind({:a => simple(:x)}, :x => 'b')
++      end 
++      it "should match {:a => 'b'} with no binds" do
++        exp.should match_with_bind({:a => 'b'}, {})
++      end 
++    end
++    context "a more complex hash {:a => {:b => 'c'}}" do
++      attr_reader :exp
++      before(:each) do
++        @exp = t(:a => {:b => 'c'})
++      end
++      
++      it "should match wholly with {:a => {:b => simple(:x)}}" do
++        exp.should match_with_bind({:a => {:b => simple(:x)}}, :x => 'c')
++      end
++      it "should match wholly with {:a => subtree(:t)}" do
++        with_match_locals(:a => subtree(:t)) do |dict|
++          dict[:t].should == {:b => 'c'}
++        end
++      end
++      it "should not bind subtrees to variables in {:a => simple(:x)}" do
++        p(:a => simple(:x)).should_not detect(exp)
++      end
++    end
++    context "a more complex hash {:a => 'a', :b => 'b'}" do
++      attr_reader :exp
++      before(:each) do
++        @exp = t({:a => 'a', :b => 'b'})
++      end
++
++      it "should not match partially" do
++        Parslet::Pattern.new(:a => simple(:x)).match(exp).should be_nil
++      end 
++      it "should match completely" do
++        exp.should match_with_bind({:a => simple(:x), :b => simple(:y)}, 
++          :x => 'a', 
++          :y => 'b')
++      end 
++    end
++    context "an array of 'a', 'b', 'c'" do
++      let(:exp) { ['a', 'b', 'c'] }
++
++      it "should match all elements at once" do
++        exp.should match_with_bind(
++          [simple(:x), simple(:y), simple(:z)], 
++          :x => 'a', :y => 'b', :z => 'c')
++      end 
++    end
++    context "{:a => 'a', :b => 'b'}" do
++      attr_reader :exp
++      before(:each) do
++        @exp = t(:a => 'a', :b => 'b')
++      end
++
++      it "should match both elements simple(:x), simple(:y)" do
++        exp.should match_with_bind(
++          {:a => simple(:x), :b => simple(:y)}, 
++          :x => 'a', :y => 'b')
++      end
++      it "should not match a constrained match (simple(:x) != simple(:y))"  do
++        exp.should_not detect({:a => simple(:x), :b => simple(:x)})
++      end
++    end
++    context "{:a => 'a', :b => 'a'}" do
++      attr_reader :exp
++      before(:each) do
++        @exp = t(:a => 'a', :b => 'a')
++      end
++
++      it "should match constrained pattern" do
++        exp.should match_with_bind(
++          {:a => simple(:x), :b => simple(:x)}, 
++          :x => 'a')
++      end
++    end
++    context "{:sub1 => {:a => 'a'}, :sub2 => {:a => 'a'}}" do
++      attr_reader :exp
++      before(:each) do
++        @exp = t({
++          :sub1 => {:a => 'a'}, 
++          :sub2 => {:a => 'a'} 
++        })
++      end
++
++      it "should verify constraints over several subtrees" do
++        exp.should match_with_bind({
++          :sub1 => {:a => simple(:x)}, 
++          :sub2 => {:a => simple(:x)} 
++        }, :x => 'a')
++      end
++      it "should return both bind variables simple(:x), simple(:y)" do
++        exp.should match_with_bind({
++          :sub1 => {:a => simple(:x)}, 
++          :sub2 => {:a => simple(:y)} 
++        }, :x => 'a', :y => 'a')
++      end  
++    end
++    context "{:sub1 => {:a => 'a'}, :sub2 => {:a => 'b'}}" do
++      attr_reader :exp
++      before(:each) do
++        @exp = t({
++          :sub1 => {:a => 'a'}, 
++          :sub2 => {:a => 'b'} 
++        })
++      end
++
++      it "should verify constraints over several subtrees" do
++        exp.should_not match_with_bind({
++          :sub1 => {:a => simple(:x)}, 
++          :sub2 => {:a => simple(:x)} 
++        }, :x => 'a')
++      end
++      it "should return both bind variables simple(:x), simple(:y)" do
++        exp.should match_with_bind({
++          :sub1 => {:a => simple(:x)}, 
++          :sub2 => {:a => simple(:y)} 
++        }, :x => 'a', :y => 'b')
++      end  
++    end
++    context "[{:a => 'x'}, {:a => 'y'}]" do
++      attr_reader :exp  
++      before(:each) do
++        @exp = t([{:a => 'x'}, {:a => 'y'}])
++      end
++      
++      it "should not match sequence(:x) (as a whole)" do
++        exp.should_not detect(sequence(:x))
++      end
++    end
++    context "['x', 'y', 'z']" do
++      attr_reader :exp  
++      before(:each) do
++        @exp = t(['x', 'y', 'z'])
++      end
++
++      it "should match [simple(:x), simple(:y), simple(:z)]" do
++        with_match_locals([simple(:x), simple(:y), simple(:z)]) do |dict|
++          dict[:x].should == 'x'
++          dict[:y].should == 'y'
++          dict[:z].should == 'z'
++        end
++      end
++      it "should match %w(x y z)" do
++        exp.should match_with_bind(%w(x y z), { })
++      end 
++      it "should not match [simple(:x), simple(:y), simple(:x)]" do
++        exp.should_not detect([simple(:x), simple(:y), simple(:x)])
++      end
++      it "should not match [simple(:x), simple(:y)]" do
++        exp.should_not detect([simple(:x), simple(:y), simple(:x)])
++      end
++      it "should match sequence(:x) (as array)" do
++        exp.should match_with_bind(sequence(:x), :x => ['x', 'y', 'z'])
++      end
++    end
++    context "{:a => [1,2,3]}" do
++      attr_reader :exp  
++      before(:each) do
++        @exp = t(:a => [1,2,3])
++      end
++
++      it "should match :a => sequence(:x) (binding x to the whole array)" do
++        exp.should match_with_bind({:a => sequence(:x)}, {:x => [1,2,3]})
++      end
++    end
++    context "with differently ordered hashes" do
++      it "should still match" do
++        t(:a => 'a', :b => 'b').should detect(:a => 'a', :b => 'b')
++        t(:a => 'a', :b => 'b').should detect(:b => 'b', :a => 'a')
++
++        t(:b => 'b', :a => 'a').should detect(:b => 'b', :a => 'a')
++        t(:b => 'b', :a => 'a').should detect(:a => 'a', :b => 'b')
++      end 
++    end
++  end
++end
+\ No newline at end of file
+diff --git a/spec/parslet/rig/rspec_spec.rb b/spec/parslet/rig/rspec_spec.rb
+new file mode 100644
+index 0000000..3e78449
+--- /dev/null
++++ b/spec/parslet/rig/rspec_spec.rb
+@@ -0,0 +1,35 @@
++require 'spec_helper'
++require 'parslet/rig/rspec'
++
++describe 'rspec integration' do
++  include Parslet
++  subject { str('example') }
++
++  it { should parse('example') }
++  it { should_not parse('foo') }
++  it { should parse('example').as('example') }
++  it { should_not parse('foo').as('example') }
++  it { should_not parse('example').as('foo') }
++
++  it { str('foo').as(:bar).should parse('foo').as({:bar => 'foo'}) }
++  it { str('foo').as(:bar).should_not parse('foo').as({:b => 'f'}) }
++
++  it 'accepts a block to assert more specific details about the parsing output' do
++    str('foo').as(:bar).should(parse('foo').as { |output|
++      output.should have_key(:bar)
++      output.values.first.should == 'foo'
++    })
++  end
++
++  # Uncomment to test error messages manually: 
++  # it { str('foo').should parse('foo', :trace => true).as('bar') }
++  # it { str('foo').should parse('food', :trace => true) }
++  # it { str('foo').should_not parse('foo', :trace => true).as('foo') }
++  # it { str('foo').should_not parse('foo', :trace => true) }
++  # it 'accepts a block to assert more specific details about the parsing output' do
++  #   str('foo').as(:bar).should(parse('foo', :trace => true).as { |output|
++  #     output.should_not have_key(:bar)
++  #   })
++  # end
++  
++end
+diff --git a/spec/parslet/scope_spec.rb b/spec/parslet/scope_spec.rb
+new file mode 100644
+index 0000000..398c3be
+--- /dev/null
++++ b/spec/parslet/scope_spec.rb
+@@ -0,0 +1,45 @@
++require 'spec_helper'
++
++describe Parslet::Scope do
++  let(:scope) { described_class.new }
++  
++  describe 'simple store/retrieve' do
++    before(:each) { scope[:foo] = :bar }
++    it "allows storing objects" do
++      scope[:obj] = 42
++    end 
++    it "raises on access of empty slots" do
++      expect {
++        scope[:empty]
++      }.to raise_error(Parslet::Scope::NotFound)
++    end 
++    it "allows retrieval of stored values" do
++      scope[:foo].should == :bar
++    end 
++  end
++  
++  describe 'scoping' do
++    before(:each) { scope[:depth] = 1 }
++    before(:each) { scope.push }
++    
++    let(:depth) { scope[:depth] }
++    subject { depth }
++    
++    it { should == 1 }
++    describe 'after a push' do
++      before(:each) { scope.push }
++      it { should == 1 }
++      
++      describe 'and reassign' do
++        before(:each) { scope[:depth] = 2 }
++        
++        it { should == 2 }
++
++        describe 'and a pop' do
++          before(:each) { scope.pop }
++          it { should == 1 }
++        end
++      end
++    end
++  end
++end
+\ No newline at end of file
+diff --git a/spec/parslet/slice_spec.rb b/spec/parslet/slice_spec.rb
+new file mode 100644
+index 0000000..ef41d35
+--- /dev/null
++++ b/spec/parslet/slice_spec.rb
+@@ -0,0 +1,134 @@
++require 'spec_helper'
++
++describe Parslet::Slice do
++  describe "construction" do
++    it "should construct from an offset and a string" do
++      described_class.new('foobar', 40)
++    end
++  end
++  context "('foobar', 40)" do
++    let(:slice) { described_class.new('foobar', 40) }
++    describe "comparison" do
++      it "should be equal to other slices with the same attributes" do
++        other = described_class.new('foobar', 40)
++        slice.should == other
++        other.should == slice
++      end 
++      it "should be equal to other slices (offset is irrelevant for comparison)" do
++        other = described_class.new('foobar', 41)
++        slice.should == other
++        other.should == slice
++      end 
++      it "should be equal to a string with the same content" do
++        slice.should == 'foobar'
++      end
++      it "should be equal to a string (inversed operands)" do
++        'foobar'.should == slice
++      end 
++      it "should not be equal to a string" do
++        slice.should_not equal('foobar')
++      end 
++      it "should not be eql to a string" do
++        slice.should_not eql('foobar')
++      end 
++      it "should not hash to the same number" do
++        slice.hash.should_not == 'foobar'.hash
++      end 
++    end
++    describe "offset" do
++      it "should return the associated offset" do
++        slice.offset.should == 40
++      end
++      it "should fail to return a line and column" do
++        lambda {
++          slice.line_and_column
++        }.should raise_error(ArgumentError)
++      end 
++      
++      context "when constructed with a source" do
++        let(:slice) { described_class.new(
++          'foobar', 40,  
++          flexmock(:cache, :line_and_column => [13, 14])) }
++        it "should return proper line and column" do
++          slice.line_and_column.should == [13, 14]
++        end
++      end
++    end
++    describe "string methods" do
++      describe "matching" do
++        it "should match as a string would" do
++          slice.should match(/bar/)
++          slice.should match(/foo/)
++
++          md = slice.match(/f(o)o/)
++          md.captures.first.should == 'o'
++        end
++      end
++      describe "<- #size" do
++        subject { slice.size }
++        it { should == 6 } 
++      end
++      describe "<- #+" do
++        let(:other) { described_class.new('baz', 10) }
++        subject { slice + other }
++        
++        it "should concat like string does" do
++          subject.size.should == 9
++          subject.should == 'foobarbaz'
++          subject.offset.should == 40
++        end 
++      end
++    end
++    describe "conversion" do
++      describe "<- #to_slice" do
++        it "should return self" do
++          slice.to_slice.should eq(slice)
++        end 
++      end
++      describe "<- #to_sym" do
++        it "should return :foobar" do
++          slice.to_sym.should == :foobar
++        end 
++      end
++      describe "cast to Float" do
++        it "should return a float" do
++          Float(described_class.new('1.345', 11)).should == 1.345
++        end 
++      end
++      describe "cast to Integer" do
++        it "should cast to integer as a string would" do
++          s = described_class.new('1234', 40)
++          Integer(s).should == 1234
++          s.to_i.should == 1234
++        end 
++        it "should fail when Integer would fail on a string" do
++          lambda { Integer(slice) }.should raise_error
++        end 
++        it "should turn into zero when a string would" do
++          slice.to_i.should == 0
++        end 
++      end
++    end
++    describe "inspection and string conversion" do
++      describe "#inspect" do
++        subject { slice.inspect }
++        it { should == '"foobar"@40' }
++      end
++      describe "#to_s" do
++        subject { slice.to_s }
++        it { should == 'foobar' }
++      end
++    end
++    describe "serializability" do
++      it "should serialize" do
++        Marshal.dump(slice)
++      end
++      context "when storing a line cache" do
++        let(:slice) { described_class.new('foobar', 40, Parslet::Source::LineCache.new()) }
++        it "should serialize" do
++          Marshal.dump(slice)
++        end
++      end
++    end
++  end
++end
+\ No newline at end of file
+diff --git a/spec/parslet/source/line_cache_spec.rb b/spec/parslet/source/line_cache_spec.rb
+new file mode 100644
+index 0000000..94626d2
+--- /dev/null
++++ b/spec/parslet/source/line_cache_spec.rb
+@@ -0,0 +1,39 @@
++require 'spec_helper'
++
++describe Parslet::Source::RangeSearch do
++  describe "<- #lbound" do
++    context "for a simple array" do
++      let(:ary) { [10, 20, 30, 40, 50] }
++      before(:each) { ary.extend Parslet::Source::RangeSearch }
++
++      it "should return correct answers for numbers not in the array" do
++        ary.lbound(5).should == 0
++        ary.lbound(15).should == 1
++        ary.lbound(25).should == 2
++        ary.lbound(35).should == 3
++        ary.lbound(45).should == 4
++      end
++      it "should return correct answers for numbers in the array" do
++        ary.lbound(10).should == 1
++        ary.lbound(20).should == 2
++        ary.lbound(30).should == 3
++        ary.lbound(40).should == 4
++      end
++      it "should cover right edge case" do
++        ary.lbound(50).should be_nil
++        ary.lbound(51).should be_nil
++      end 
++      it "should cover left edge case" do
++        ary.lbound(0).should == 0
++      end
++    end
++    context "for an empty array" do
++      let(:ary) { [] }
++      before(:each) { ary.extend Parslet::Source::RangeSearch }
++
++      it "should return nil" do
++        ary.lbound(1).should be_nil
++      end 
++    end
++  end
++end
+\ No newline at end of file
+diff --git a/spec/parslet/source_spec.rb b/spec/parslet/source_spec.rb
+new file mode 100644
+index 0000000..c50c11e
+--- /dev/null
++++ b/spec/parslet/source_spec.rb
+@@ -0,0 +1,154 @@
++# Encoding: UTF-8
++
++require 'spec_helper'
++
++describe Parslet::Source do
++  describe "using simple input" do
++    let(:str)     { "a"*100 + "\n" + "a"*100 + "\n" }
++    let(:source)  { described_class.new(str) }
++  
++    describe "<- #read(n)" do
++      it "should not raise error when the return value is nil" do
++        described_class.new('').consume(1)
++      end 
++      it "should return 100 'a's when reading 100 chars" do
++        source.consume(100).should == 'a'*100
++      end
++    end
++    describe "<- #chars_left" do
++      subject { source.chars_left }
++  
++      it { should == 202 }
++      context "after depleting the source" do
++        before(:each) { source.consume(10000) }
++  
++        it { should == 0 }
++      end
++    end
++    describe "<- #pos" do
++      subject { source.pos }
++  
++      it { should == 0 }
++      context "after reading a few bytes" do
++        it "should still be correct" do
++          pos = 0
++          10.times do
++            pos += (n = rand(10)+1)
++            source.consume(n)
++  
++            source.pos.should == pos
++          end
++        end 
++      end
++    end
++    describe "<- #pos=(n)" do
++      subject { source.pos }
++      10.times do
++        pos = rand(200)
++        context "setting position #{pos}" do
++          before(:each) { source.pos = pos }
++  
++          it { should == pos }
++        end
++      end
++    end
++    describe "<- #column & #line" do
++      subject { source.line_and_column }
++  
++      it { should == [1,1] }
++  
++      context "on the first line" do
++        it "should increase column with every read" do
++          10.times do |i|
++            source.line_and_column.last.should == 1+i
++            source.consume(1)
++          end
++        end 
++      end
++      context "on the second line" do
++        before(:each) { source.consume(101) }
++        it { should == [2, 1]}
++      end
++      context "after reading everything" do
++        before(:each) { source.consume(10000) }
++  
++        context "when seeking to 9" do
++          before(:each) { source.pos = 9 }
++          it { should == [1, 10] }
++        end
++        context "when seeking to 100" do
++          before(:each) { source.pos = 100 }
++          it { should == [1, 101] }
++        end
++        context "when seeking to 101" do
++          before(:each) { source.pos = 101 }
++          it { should == [2, 1] }
++        end
++        context "when seeking to 102" do
++          before(:each) { source.pos = 102 }
++          it { should == [2, 2] }
++        end
++        context "when seeking beyond eof" do
++          it "should not throw an error" do
++            source.pos = 1000
++          end 
++        end
++      end
++      context "reading char by char, storing the results" do
++        attr_reader :results
++        before(:each) { 
++          @results = {}
++          while source.chars_left>0
++            pos = source.pos
++            @results[pos] = source.line_and_column
++            source.consume(1)
++          end
++  
++          @results.should have(202).entries
++          @results
++        }
++  
++        context "when using pos argument" do
++          it "should return the same results" do
++            results.each do |pos, result|
++              source.line_and_column(pos).should == result
++            end
++          end 
++        end
++        it "should give the same results when seeking" do
++          results.each do |pos, result|
++            source.pos = pos
++            source.line_and_column.should == result
++          end
++        end
++        it "should give the same results when reading" do
++          cur = source.pos = 0
++          while source.chars_left>0
++            source.line_and_column.should == results[cur]
++            cur += 1
++            source.consume(1)
++          end
++        end 
++      end
++    end
++    
++  end
++  
++  describe "reading encoded input", :ruby => 1.9 do
++    let(:source) { described_class.new("éö変わる") }
++    
++    it "should read characters, not bytes" do
++      source.should match("é")
++      source.consume(1)
++      
++      source.should match("ö")
++      source.consume(1)
++      
++      source.should match("変")
++      source.consume(1)
++      
++      source.consume(2)
++      source.chars_left.should == 0
++    end 
++  end
++end
+diff --git a/spec/parslet/transform/context_spec.rb b/spec/parslet/transform/context_spec.rb
+new file mode 100644
+index 0000000..4ecca3b
+--- /dev/null
++++ b/spec/parslet/transform/context_spec.rb
+@@ -0,0 +1,35 @@
++require 'spec_helper'
++
++describe Parslet::Transform::Context do
++  def context(*args)
++    described_class.new(*args)
++  end
++  
++  it "binds hash keys as variable like things" do
++    context(:a => 'value').instance_eval { a }.
++      should == 'value'
++  end
++  describe 'when a method in BlankSlate is inherited from the environment somehow' do
++    before(:each) { BlankSlate.send(:define_method, :a) { 'c' } }
++    after(:each) { BlankSlate.send(:undef_method, :a) }
++    
++    it "masks what is already on blank slate" do
++      context(:a => 'b').instance_eval { a }.
++        should == 'b'
++    end  
++  end
++  it "should not reveal define_singleton_method for all users of blankslate, just for us" do
++    expect {
++      BlankSlate.new.instance_eval {
++        define_singleton_method(:foo) { 'foo' }
++      }
++    }.to raise_error(NoMethodError)
++  end 
++  it "one contexts variables aren't the next ones" do
++    ca = context(:a => 'b')
++    cb = context(:b => 'c')
++
++    ca.methods.should_not include(:b)
++    cb.methods.should_not include(:a)
++  end
++end
+\ No newline at end of file
+diff --git a/spec/parslet/transform_spec.rb b/spec/parslet/transform_spec.rb
+new file mode 100644
+index 0000000..0a3af5a
+--- /dev/null
++++ b/spec/parslet/transform_spec.rb
+@@ -0,0 +1,144 @@
++require 'spec_helper'
++
++require 'parslet'
++
++describe Parslet::Transform do
++  include Parslet
++  
++  let(:transform) { Parslet::Transform.new }
++  attr_reader :transform
++  before(:each) do
++    @transform = Parslet::Transform.new
++  end
++  
++  class A < Struct.new(:elt); end
++  class B < Struct.new(:elt); end
++  class C < Struct.new(:elt); end
++  class Bi < Struct.new(:a, :b); end
++
++  describe "delayed construction" do
++    context "given simple(:x) => A.new(x)" do
++      before(:each) do
++        transform.rule(simple(:x)) { |d| A.new(d[:x]) }
++      end
++
++      it "should transform 'a' into A.new('a')" do
++        transform.apply('a').should == A.new('a')
++      end 
++      it "should transform ['a', 'b'] into [A.new('a'), A.new('b')]" do
++        transform.apply(['a', 'b']).should == 
++          [A.new('a'), A.new('b')]
++      end
++    end
++    context "given rules on {:a => simple(:x)} and {:b => :_x}" do
++      before(:each) do
++        transform.rule(:a => simple(:x)) { |d| A.new(d[:x]) }
++        transform.rule(:b => simple(:x)) { |d| B.new(d[:x]) }
++      end
++
++      it "should transform {:d=>{:b=>'c'}} into d => B('c')" do
++        transform.apply({:d=>{:b=>'c'}}).should == {:d => B.new('c')}
++      end
++      it "should transform {:a=>{:b=>'c'}} into A(B('c'))" do
++        transform.apply({:a=>{:b=>'c'}}).should == A.new(B.new('c'))
++      end
++    end
++    describe "pulling out subbranches" do
++      before(:each) do
++        transform.rule(:a => {:b => simple(:x)}, :d => {:e => simple(:y)}) { |d|
++          Bi.new(*d.values_at(:x, :y))
++        }
++      end
++
++      it "should yield Bi.new('c', 'f')" do
++        transform.apply(:a => {:b => 'c'}, :d => {:e => 'f'}).should ==
++          Bi.new('c', 'f')
++      end 
++    end
++  end
++  describe "dsl construction" do
++    let(:transform) { Parslet::Transform.new do
++        rule(simple(:x)) { A.new(x) }
++      end 
++    }
++    
++    it "should still evaluate rules correctly" do
++      transform.apply('a').should == A.new('a')
++    end 
++  end
++  describe "class construction" do
++    class OptimusPrime < Parslet::Transform 
++      rule(simple(:x)) { A.new(x) }
++    end
++    let(:transform) { OptimusPrime.new }
++    
++    it "should evaluate rules" do
++      transform.apply('a').should == A.new('a')
++    end 
++  end
++  describe "<- #call_on_match" do
++    let(:bindings) { { :foo => 'test' } }
++    context "when given a block of arity 1" do
++      it "should call the block" do
++        called = false
++        transform.call_on_match(bindings, lambda do |dict|
++          called = true
++        end)
++        
++        called.should == true
++      end 
++      it "should yield the bindings" do
++        transform.call_on_match(bindings, lambda do |dict|
++          dict.should == bindings
++        end)
++      end
++      it "should execute in the current context"  do
++        foo = 'test'
++        transform.call_on_match(bindings, lambda do |dict|
++          foo.should == 'test'
++        end)
++      end
++    end
++    context "when given a block of arity 0" do
++      it "should call the block" do
++        called = false
++        transform.call_on_match(bindings, proc do 
++          called = true
++        end)
++        
++        called.should == true
++      end 
++      it "should have bindings as local variables" do
++        transform.call_on_match(bindings, proc do
++          foo.should == 'test'
++        end)
++      end
++      it "should execute in its own context" do
++        @bar = 'test'
++        transform.call_on_match(bindings, proc do
++          @bar.should_not == 'test'
++        end)
++      end
++    end
++  end
++  
++  context "various transformations (regression)" do
++    context "hashes" do
++      it "are matched completely" do
++        transform.rule(:a => simple(:x)) { fail }
++        transform.apply(:a => 'a', :b => 'b')
++      end 
++    end
++  end
++  
++  context "when not using the bindings as hash, but as local variables" do
++    it "should access the variables" do
++      transform.rule(simple(:x)) { A.new(x) }
++      transform.apply('a').should == A.new('a')
++    end
++    it "should allow context as local variable" do
++      transform.rule(simple(:x)) { foo }
++      transform.apply('a', :foo => 'bar').should == 'bar'
++    end
++  end
++end
+\ No newline at end of file
+diff --git a/spec/spec_helper.rb b/spec/spec_helper.rb
+new file mode 100644
+index 0000000..a2f1fc1
+--- /dev/null
++++ b/spec/spec_helper.rb
+@@ -0,0 +1,24 @@
++
++require 'parslet'
++
++require 'parslet/rig/rspec'
++require 'parslet/atoms/visitor'
++require 'parslet/export'
++
++RSpec.configure do |config|
++  config.mock_with :flexmock
++  
++  # Exclude other ruby versions by giving :ruby => 1.8 or :ruby => 1.9
++  #
++  config.filter_run_excluding :ruby => lambda { |version|
++    RUBY_VERSION.to_s !~ /^#{Regexp.escape(version.to_s)}/
++  }
++end
++
++def catch_failed_parse
++  begin
++    yield
++  rescue Parslet::ParseFailed => exception
++  end
++  exception.cause
++end
+\ No newline at end of file

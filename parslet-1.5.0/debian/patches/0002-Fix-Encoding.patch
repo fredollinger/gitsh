@@ -1,0 +1,20 @@
+From: Youhei SASAKI <uwabami@gfd-dennou.org>
+Date: Mon, 27 Jan 2014 13:27:48 +0900
+Subject: Fix Encoding
+
+Signed-off-by: Youhei SASAKI <uwabami@gfd-dennou.org>
+---
+ example/sentence.rb | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/example/sentence.rb b/example/sentence.rb
+index b73d140..fdd3b7f 100644
+--- a/example/sentence.rb
++++ b/example/sentence.rb
+@@ -1,5 +1,5 @@
+ # encoding: UTF-8
+-
++Encoding.default_internal = "UTF-8"
+ # A small example contributed by John Mettraux (jmettraux) that demonstrates
+ # working with Unicode. This only works on Ruby 1.9.
+ 

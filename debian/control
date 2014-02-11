@@ -10,6 +10,6 @@ Homepage: https://github.com/thoughtbot/gitsh
 
 Package: gitsh
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, ruby2.0, ruby-bundler, ruby-blankslate
 Description: Git shell.
  Shell for git.

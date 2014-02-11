@@ -1,0 +1,20 @@
+Package: ruby-parslet
+Version: 1.5.0-1
+Architecture: all
+Maintainer: Debian Ruby Extras Maintainers <pkg-ruby-extras-maintainers@lists.alioth.debian.org>
+Installed-Size: 140
+Depends: ruby | ruby-interpreter, ruby-blankslate (>= 2.0)
+Section: ruby
+Priority: optional
+Homepage: http://kschiess.github.io/parslet
+Description: Parser construction library with great error reporting in Ruby
+ Parslet makes developing complex parsers easy. It does so by
+ .
+ * providing the best error reporting possible
+ * not generating reams of code for you to debug
+ .
+ Parslet takes the long way around to make your job easier. It allows for
+ incremental language construction. Often, you start out small, implementing
+ the atoms of your language first; _parslet_ takes pride in making this
+ possible.
+Ruby-Versions: ruby1.9.1 ruby2.0
